@@ -67,6 +67,22 @@ mvn verify
 The integration tests start a throwaway PostgreSQL container with Testcontainers,
 so Docker must be running.
 
+### Smoke test
+
+`scripts/smoke-test.sh` exercises every endpoint of a running instance with curl
+(about 50 checks: success paths, validation errors, 401/403/404/409 cases, the error
+body format and HS256 token signing) and exits non-zero if any check fails.
+
+```bash
+docker compose up -d --build
+./scripts/smoke-test.sh          # on Windows: run from Git Bash or WSL
+docker compose down -v           # stop and delete test data
+```
+
+It needs `bash`, `curl` and `sed`. It creates uniquely named users and rooms, so it can
+be rerun against the same database. Override the target with `BASE_URL`, and the admin
+credentials with `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
+
 ## Configuration
 
 All settings come from environment variables and have development defaults:
@@ -76,7 +92,7 @@ All settings come from environment variables and have development defaults:
 | `DB_URL`            | `jdbc:postgresql://localhost:5432/roombooking`     | JDBC URL                                      |
 | `DB_USERNAME`       | `postgres`                                         | Database user                                 |
 | `DB_PASSWORD`       | `postgres`                                         | Database password                             |
-| `JWT_SECRET`        | dev-only key (see `application.yml`)               | Base64-encoded HMAC key, at least 256 bits    |
+| `JWT_SECRET`        | dev-only key (see `application.yml`)               | Base64-encoded key, ≥ 256 bits; tokens are signed with HS256 |
 | `JWT_EXPIRATION_MS` | `3600000`                                          | Token lifetime (ms)                           |
 | `SERVER_PORT`       | `8080`                                             | HTTP port                                     |
 
