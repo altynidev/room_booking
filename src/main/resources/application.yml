@@ -1,5 +1,7 @@
 server:
   port: ${SERVER_PORT:8080}
+  # Honour X-Forwarded-* from the nginx frontend (correct scheme/host in Swagger's server URL).
+  forward-headers-strategy: framework
 
 spring:
   application:
