@@ -7,6 +7,7 @@ import com.example.roombooking.dto.room.TimeSlot;
 import com.example.roombooking.entity.Booking;
 import com.example.roombooking.entity.BookingStatus;
 import com.example.roombooking.entity.Room;
+import com.example.roombooking.exception.BadRequestException;
 import com.example.roombooking.exception.ConflictException;
 import com.example.roombooking.exception.NotFoundException;
 import com.example.roombooking.repository.BookingRepository;
@@ -16,8 +17,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,10 +79,14 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
-    public AvailabilityResponse availability(Long id, LocalDate date) {
+    public AvailabilityResponse availability(Long id, LocalDate date, String zone) {
         Room room = getRoom(id);
-        OffsetDateTime dayStart = date.atStartOfDay().atOffset(ZoneOffset.UTC);
-        OffsetDateTime dayEnd = dayStart.plusDays(1);
+        ZoneId zoneId = parseZone(zone);
+        // Day bounds are local to the zone (DST days are 23 or 25 hours); slots are returned in UTC.
+        OffsetDateTime dayStart = date.atStartOfDay(zoneId).toOffsetDateTime()
+                .withOffsetSameInstant(ZoneOffset.UTC);
+        OffsetDateTime dayEnd = date.plusDays(1).atStartOfDay(zoneId).toOffsetDateTime()
+                .withOffsetSameInstant(ZoneOffset.UTC);
 
         List<Booking> bookings = bookingRepository.findByRoomInRange(
                 id, BookingStatus.ACTIVE, dayStart, dayEnd);
@@ -105,6 +112,14 @@ public class RoomService {
     Room getRoom(Long id) {
         return roomRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Room %d not found".formatted(id)));
+    }
+
+    private static ZoneId parseZone(String zone) {
+        try {
+            return ZoneId.of(zone);
+        } catch (DateTimeException e) {
+            throw new BadRequestException("Invalid value '%s' for parameter 'zone'".formatted(zone));
+        }
     }
 
     private static OffsetDateTime max(OffsetDateTime a, OffsetDateTime b) {

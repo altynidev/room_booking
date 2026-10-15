@@ -42,8 +42,9 @@ public class RoomController {
     @GetMapping("/{id}/availability")
     public AvailabilityResponse availability(
             @PathVariable Long id,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return roomService.availability(id, date);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "UTC") String zone) {
+        return roomService.availability(id, date, zone);
     }
 
     @PostMapping

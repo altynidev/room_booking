@@ -259,6 +259,53 @@ class RoomBookingApiIntegrationTest {
     }
 
     @Test
+    void availabilityUsesDayBoundsOfRequestedZone() throws Exception {
+        long roomId = createRoom("Orion");
+        String alice = registerAndLogin("alice");
+        book(alice, roomId, DAY.plusHours(9), DAY.plusHours(10)).andExpect(status().isCreated());
+        // 20:00Z is already the next day at UTC+5.
+        book(alice, roomId, DAY.plusHours(20), DAY.plusHours(21)).andExpect(status().isCreated());
+
+        String body = mvc.perform(get("/api/rooms/" + roomId + "/availability")
+                        .param("date", DAY.toLocalDate().toString())
+                        .param("zone", "Etc/GMT-5") // POSIX sign: this is UTC+5
+                        .header("Authorization", bearer(alice)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookedSlots", hasSize(1)))
+                .andReturn().getResponse().getContentAsString();
+        JsonNode firstFree = objectMapper.readTree(body).get("freeSlots").get(0);
+        assertThat(OffsetDateTime.parse(firstFree.get("start").asText()))
+                .isEqualTo(DAY.minusHours(5));
+
+        mvc.perform(get("/api/rooms/" + roomId + "/availability")
+                        .param("date", DAY.toLocalDate().toString())
+                        .param("zone", "Mars/Olympus")
+                        .header("Authorization", bearer(alice)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid value 'Mars/Olympus' for parameter 'zone'"));
+    }
+
+    @Test
+    void meReturnsCurrentUser() throws Exception {
+        String alice = registerAndLogin("alice");
+        mvc.perform(get("/api/auth/me").header("Authorization", bearer(alice)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("alice"))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.password").doesNotExist());
+
+        mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void openApiDocsArePublic() throws Exception {
+        mvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/bookings']").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"));
+    }
+
+    @Test
     void databaseRejectsOverlappingActiveBookings() throws Exception {
         long roomId = createRoom("Orion");
         String alice = registerAndLogin("alice");

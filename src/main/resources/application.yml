@@ -24,6 +24,31 @@ spring:
       write-dates-as-timestamps: false
     time-zone: UTC
 
+# Actuator runs on its own port so health checks and metrics are not exposed
+# through the public API port (docker-compose does not publish it).
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
 app:
   jwt:
     # Development default only - always override JWT_SECRET in real deployments.

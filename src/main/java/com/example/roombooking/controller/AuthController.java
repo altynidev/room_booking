@@ -4,10 +4,13 @@ import com.example.roombooking.dto.auth.AuthResponse;
 import com.example.roombooking.dto.auth.LoginRequest;
 import com.example.roombooking.dto.auth.RegisterRequest;
 import com.example.roombooking.dto.auth.UserResponse;
+import com.example.roombooking.security.UserPrincipal;
 import com.example.roombooking.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,5 +33,11 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    /** The user the bearer token belongs to; lets clients learn their role after login. */
+    @GetMapping("/me")
+    public UserResponse me(@AuthenticationPrincipal UserPrincipal principal) {
+        return new UserResponse(principal.getId(), principal.getUsername(), principal.getRole());
     }
 }

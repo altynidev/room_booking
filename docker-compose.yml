@@ -26,8 +26,17 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       JWT_SECRET: ${JWT_SECRET:-ZGV2LW9ubHktc2VjcmV0LWtleS1jaGFuZ2UtbWUtaW4tcHJvZHVjdGlvbi0xMjM0NTY=}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      # One JSON object per log line (Elastic Common Schema), ready for log shippers.
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     ports:
       - "8080:8080"
+    # The management port (8081) is deliberately not published.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health/readiness | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 6
 
 volumes:
   pgdata:
