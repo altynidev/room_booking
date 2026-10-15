@@ -1,0 +1,12 @@
+# DOMAIN=rooms.example.com -> Caddy obtains and renews a Let's Encrypt certificate automatically.
+# DOMAIN=:80               -> plain HTTP on the server's IP (no certificate; for a first test only).
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	reverse_proxy frontend:80
+}

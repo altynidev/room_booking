@@ -52,6 +52,10 @@ springdoc:
     tags-sorter: alpha
 
 app:
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    # Unset = keep the seed password "admin123" (development only). Set it for any shared instance.
+    password: ${ADMIN_PASSWORD:}
   jwt:
     # Development default only - always override JWT_SECRET in real deployments.
     # Must be at least 256 bits (32+ bytes) for HS256.

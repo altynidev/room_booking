@@ -26,6 +26,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       JWT_SECRET: ${JWT_SECRET:-ZGV2LW9ubHktc2VjcmV0LWtleS1jaGFuZ2UtbWUtaW4tcHJvZHVjdGlvbi0xMjM0NTY=}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      # Empty keeps the seed password admin123; set it before sharing the app (see deploy/DEPLOYMENT.md).
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       # One JSON object per log line (Elastic Common Schema), ready for log shippers.
       LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     ports:

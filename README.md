@@ -73,7 +73,8 @@ Flyway creates the schema and a default administrator on first start:
 |----------|------------|-------|
 | `admin`  | `admin123` | ADMIN |
 
-> Change the admin password and set your own `JWT_SECRET` before any real deployment.
+> These are development defaults. Before anyone else can reach the app, set `ADMIN_PASSWORD`
+> (it replaces `admin123` on startup) and your own `JWT_SECRET`. See [Deployment](#deployment).
 
 Stop the stack with `docker compose down` (add `-v` to also delete the database volume).
 
@@ -128,6 +129,14 @@ In Docker, logs are one JSON object per line in Elastic Common Schema
 API documentation is generated from the code: Swagger UI at `/swagger-ui.html`, the raw
 OpenAPI document at `/v3/api-docs`. Use **Authorize** with a token from `POST /api/auth/login`.
 
+## Deployment
+
+- **Quick public link from your PC**: a Cloudflare quick tunnel, for demos.
+- **Production server**: `deploy/docker-compose.prod.yml` runs the CI-published images behind
+  Caddy with automatic HTTPS. Only ports 80/443 are exposed, and every secret is required.
+
+Step-by-step instructions, updates, rollbacks and backups: [deploy/DEPLOYMENT.md](deploy/DEPLOYMENT.md).
+
 ## CI/CD
 
 `.github/workflows/ci.yml` runs on every push and pull request:
@@ -181,6 +190,8 @@ All settings come from environment variables and have development defaults:
 | `MANAGEMENT_PORT`   | `8081`                                             | Actuator port (health, info, metrics)         |
 | `LOGGING_STRUCTURED_FORMAT_CONSOLE` | unset (plain text); `ecs` in Docker | Structured log format                 |
 | `WEB_PORT` (compose) | `3000`                                            | Host port of the website                      |
+| `ADMIN_PASSWORD`    | unset (seed `admin123` kept)                       | Password for `admin`, applied on every start (min. 12 chars) |
+| `ADMIN_USERNAME`    | `admin`                                            | Administrator account managed by `ADMIN_PASSWORD` |
 | `DB_PORT` (compose)  | `5432`                                            | Host port of PostgreSQL (change if a local Postgres already uses 5432) |
 
 Generate a secret with, for example, `openssl rand -base64 32`.
