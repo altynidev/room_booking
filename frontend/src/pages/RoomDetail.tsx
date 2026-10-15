@@ -60,15 +60,31 @@ export default function RoomDetail() {
       .filter((s) => new Date(s.end).getTime() - new Date(s.start).getTime() >= STEP_MS);
   }, [availability]);
 
-  function pickSlot(slot: TimeSlot) {
+  function selectSlot(slot: TimeSlot) {
     const s = new Date(slot.start);
-    const slotEnd = new Date(slot.end).getTime();
-    const e = new Date(Math.min(s.getTime() + 60 * 60 * 1000, slotEnd));
+    const e = new Date(Math.min(s.getTime() + 60 * 60 * 1000, new Date(slot.end).getTime()));
     setStart(toTimeInput(s));
     setEnd(toTimeInput(e));
+  }
+
+  function pickSlot(slot: TimeSlot) {
+    selectSlot(slot);
     setSuccess(null);
     setError(null);
   }
+
+  // Prefill the form with the first free hour from 09:00 on, rather than a time
+  // that is already taken or in the past.
+  useEffect(() => {
+    if (freeSlots.length === 0) return;
+    const workdayStart = fromInputs(date, '09:00').getTime();
+    const slot = freeSlots.find((s) => new Date(s.end).getTime() - Math.max(new Date(s.start).getTime(), workdayStart) >= STEP_MS);
+    if (slot) {
+      selectSlot({ start: new Date(Math.max(new Date(slot.start).getTime(), workdayStart)).toISOString(), end: slot.end });
+    } else {
+      selectSlot(freeSlots[0]);
+    }
+  }, [freeSlots, date]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();

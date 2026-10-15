@@ -181,6 +181,7 @@ All settings come from environment variables and have development defaults:
 | `MANAGEMENT_PORT`   | `8081`                                             | Actuator port (health, info, metrics)         |
 | `LOGGING_STRUCTURED_FORMAT_CONSOLE` | unset (plain text); `ecs` in Docker | Structured log format                 |
 | `WEB_PORT` (compose) | `3000`                                            | Host port of the website                      |
+| `DB_PORT` (compose)  | `5432`                                            | Host port of PostgreSQL (change if a local Postgres already uses 5432) |
 
 Generate a secret with, for example, `openssl rand -base64 32`.
 
